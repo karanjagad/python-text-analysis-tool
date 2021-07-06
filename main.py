@@ -89,7 +89,7 @@ def percentage(count, total):
     return 100 * count / total
 
 def lexicalDiversity(texts):
-
+    """Texical diversity score in percentage """
     lexicalDiversity = [lexical_diversity(text) for text in texts]
     tokens = [len(text) for text in texts]
     types = [len(set(text)) for text in texts]  
@@ -99,19 +99,25 @@ def lexicalDiversity(texts):
     return lexicalDiversity
 
 
+
 start = timeit.timeit()
 URL = 'https://www.gevestor.de/finanzwissen/aktien'
 soup = webScrapping(URL)
 
+#Manual Split and textstat library used to compare between inital results 
 manualSplit(soup)
-
 textstatDataSplit(soup)
+
+#Using spacy Data for majority of calculations
 spacyData =  spacyDataSplit(soup)
 
 print("Gunning Fog Index" ,gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
 
+print("Lexical Diversity : ",lexicalDiversity([soup]))
+
 end = timeit.timeit()
 print("Time Taken to execute code : ",end - start)
+
 #need to do few more matrics calculations 
-souplist = [soup]
-print("Lexical Diversity : ",lexicalDiversity(souplist))
+#gunning fog index need minor changes and validation
+
