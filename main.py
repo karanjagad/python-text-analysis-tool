@@ -4,6 +4,8 @@ import requests
 import spacy 
 from spacy.lang.de.examples import sentences 
 from collections import Counter
+import timeit
+import pandas as pd
 
 
 def webScrapping(URL):
@@ -33,6 +35,7 @@ def spacyDataSplit(soup):
     about_doc = nlp(soup)
     sentences = list(about_doc.sents)
     wordCount = [token.text for token in about_doc]
+    return [sentences, wordCount]
     print("Text analysisng using spacy ")
     print("Sentence Count", len(sentences))   
     print("Word Count",len(wordCount))
@@ -55,21 +58,60 @@ def textstatDataSplit(soup):
     #frs = 206.835 - 1.015 *(textWords / textSent) - 84.6 * ( textSyllable / textWords)
     #print( frs )
 
+def syllable_count(wordlist):
+    """Calculate syllable in word list or corpus"""
+    syllabcount = 0    
+    for word in wordlist:
+        word = word.lower()
+        count = 0
+        vowels = "aeiouöäüy"
+        if word[0] in vowels:
+            count += 1
+        for index in range(1, len(word)):
+            if word[index] in vowels and word[index - 1] not in vowels:
+                count += 1
+        if word.endswith("e"):
+            count -= 1
+        if count == 0:
+            count += 1
+        syllabcount = syllabcount +  count 
+        return syllabcount
+
+def gunning_fog_index(words,sent,complexWords):
+    gunIndex = 0.4*((words/sent)+100+(complexWords/words))
+    return gunIndex
+
+def lexical_diversity(text):
+    return len(set(text)) / len(text)
+
+# percentage
+def percentage(count, total):
+    return 100 * count / total
+
+def lexicalDiversity(texts):
+
+    lexicalDiversity = [lexical_diversity(text) for text in texts]
+    tokens = [len(text) for text in texts]
+    types = [len(set(text)) for text in texts]  
+    ld = pd.DataFrame({'tokens': tokens, 'types': types,
+                    'lexical_diversity': lexicalDiversity})
+    ld.sort_values(by='lexical_diversity', ascending=False)
+    return lexicalDiversity
 
 
+start = timeit.timeit()
 URL = 'https://www.gevestor.de/finanzwissen/aktien'
 soup = webScrapping(URL)
 
 manualSplit(soup)
-spacyDataSplit(soup)
+
 textstatDataSplit(soup)
+spacyData =  spacyDataSplit(soup)
 
+print("Gunning Fog Index" ,gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
+
+end = timeit.timeit()
+print("Time Taken to execute code : ",end - start)
 #need to do few more matrics calculations 
-
-    
-
-
-
-
-
-
+souplist = [soup]
+print("Lexical Diversity : ",lexicalDiversity(souplist))
