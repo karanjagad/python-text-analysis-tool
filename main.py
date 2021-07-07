@@ -6,7 +6,8 @@ from spacy.lang.de.examples import sentences
 from collections import Counter
 import timeit
 import pandas as pd
-
+import enchant
+from enchant.checker import SpellChecker
 
 def webScrapping(URL):
     """Using BS4  for scrapping and getting data"""
@@ -43,23 +44,28 @@ def spacyDataSplit(soup):
    
 def textstatDataSplit(soup):
     """Text Analysisng  using textstat library """
+
     textstat.set_lang('de')
     your_text = soup
     textSyllable  =  textstat.syllable_count(your_text)
     textSent  = textstat.sentence_count(your_text)
     textWords = textstat.lexicon_count(your_text, removepunct=True)
-
-    print("Text Analyse using Textstat Library")
-    print("Flesch_reading_ease",textstat.flesch_reading_ease(soup))      
-    print("Num syllables:",textSyllable)    
-    print("Num sentences:", textSent)
-    print("Num words:", textWords) 
-
+    
+    #print("Flesch_reading_ease",textstat.flesch_reading_ease(soup))      
+    #print("Num syllables:",textSyllable)    
+    #print("Num sentences:", textSent)
+    #print("Num words:", textWords) 
+    dict = {'Metrics' : ['Num syllables', 'Num sentences', 'Num words'],
+        'Value' : [textSyllable, textSent, textWords],
+        }
+    df = pd.DataFrame(dict)
+    return df
     #frs = 206.835 - 1.015 *(textWords / textSent) - 84.6 * ( textSyllable / textWords)
     #print( frs )
 
 def syllable_count(wordlist):
     """Calculate syllable in word list or corpus"""
+
     syllabcount = 0    
     for word in wordlist:
         word = word.lower()
@@ -78,6 +84,8 @@ def syllable_count(wordlist):
         return syllabcount
 
 def gunning_fog_index(words,sent,complexWords):
+    """Calculate Gunning Fog Index of corpus"""
+
     gunIndex = 0.4*((words/sent)+100+(complexWords/words))
     return gunIndex
 
@@ -90,6 +98,7 @@ def percentage(count, total):
 
 def lexicalDiversity(texts):
     """Texical diversity score in percentage """
+
     lexicalDiversity = [lexical_diversity(text) for text in texts]
     tokens = [len(text) for text in texts]
     types = [len(set(text)) for text in texts]  
@@ -98,25 +107,46 @@ def lexicalDiversity(texts):
     ld.sort_values(by='lexical_diversity', ascending=False)
     return lexicalDiversity
 
+def errorCount(text):
+    """Calculate Error percentage of the corpous"""
 
+    chkr = SpellChecker("de_DE")
+    chkr.set_text(text)
+    errorwords = []
+    for err in chkr:
+    #print ("ERROR:", err.word)
+        errorwords.append(err.word)
+    return percentage(len(errorwords),len(spacyDataSplit(text)[1]))
 
 start = timeit.timeit()
+
 URL = 'https://www.gevestor.de/finanzwissen/aktien'
 soup = webScrapping(URL)
 
 #Manual Split and textstat library used to compare between inital results 
 manualSplit(soup)
-textstatDataSplit(soup)
+
+print("Text Analyse using Textstat Library")
+print(textstatDataSplit(soup))
 
 #Using spacy Data for majority of calculations
 spacyData =  spacyDataSplit(soup)
 
-print("Gunning Fog Index" ,gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
-
-print("Lexical Diversity : ",lexicalDiversity([soup]))
-
+gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
+lexd = (lexicalDiversity([soup]))
+erper = (errorCount(soup))
+fre =textstat.flesch_reading_ease(soup)
 end = timeit.timeit()
+
 print("Time Taken to execute code : ",end - start)
+
+# creating a DataFrame for metrics
+dict = {'Metrics' : ['Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease'],
+        'Value' : [gfi, lexd, erper ,fre],
+        }
+df = pd.DataFrame(dict) 
+# displaying the DataFrame
+print(df)
 
 #need to do few more matrics calculations 
 #gunning fog index need minor changes and validation
