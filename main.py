@@ -8,6 +8,7 @@ import timeit
 import pandas as pd
 import enchant
 from enchant.checker import SpellChecker
+import re
 
 def webScrapping(URL):
     """Using BS4  for scrapping and getting data"""
@@ -86,15 +87,19 @@ def syllable_count(wordlist):
 def complex_word_list(text):
     complexwordlist = []
     for word in spacyDataSplit(text)[1] :
+        word = re.sub("es$", "", word)
+        word = re.sub("ing$", "", word)
+        word = re.sub("ed$", "", word)
+
         #print(word,":",syllable_count([word]))
-        if syllable_count([word]) > 4:
+        if syllable_count([word]) >= 3:
             complexwordlist.append(word)
+            #print(complexwordlist)
     return complexwordlist
 
 def gunning_fog_index(words,sent,complexWords):
     """Calculate Gunning Fog Index of corpus"""
-
-    gunIndex = 0.4*((words/sent)+(complexWords/words))
+    gunIndex = 0.4*((words/sent)+100+(complexWords/words))
     return gunIndex
 
 def lexical_diversity(text):
@@ -117,8 +122,8 @@ def lexicalDiversity(texts):
 
 def errorCount(text):
     """Calculate Error percentage of the corpous"""
-
-    chkr = SpellChecker("de_DE")
+    chkr = SpellChecker("en_US")
+    #chkr = SpellChecker("de_DE")
     chkr.set_text(text)
     errorwords = []
     for err in chkr:
@@ -136,14 +141,20 @@ def avg_sentence_len(text):
     average_sentence_length = len(words) / len(sentences)
   return average_sentence_length #returning avg length of sentence
 
-def percentage(data, boolfunc):
+def text_percentage(data, boolfunc):
     """Returns how many % of the 'data' returns 'True' for the given boolfunc."""
     return (sum(1 for x in data if boolfunc(x)) / len(data))*100
+
+def flesch_reading_ease(word,sent,syllab):
+    
+    fre= 206.835 - 1.015 * ( word / sent ) - 84.6 * ( syllab / word )
+    return fre
+
 
 
 start = timeit.timeit()
 
-URL = 'https://www.gevestor.de/finanzwissen/aktien'
+URL = 'https://en.wikipedia.org/wiki/Wiki'
 soup = webScrapping(URL)
 
 #Manual Split and textstat library used to compare between inital results 
@@ -154,32 +165,33 @@ print(textstatDataSplit(soup))
 
 #Using spacy Data for majority of calculations
 spacyData =  spacyDataSplit(soup)
+spacyword =len(spacyData[1])
+spacysent = len(spacyData[0])
+complexwords = len(complex_word_list(soup))
+syllablecount = syllable_count(list([soup]))
 
-gfi = gunning_fog_index(len(spacyData[1]),len(spacyData[0]),len(complex_word_list(soup)))
-
+gfi = gunning_fog_index(spacyword,spacysent,complexwords)
 #gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
 lexd = (lexicalDiversity([soup]))
-#erper = (errorCount(soup))
-erper = 1
-fre =textstat.flesch_reading_ease(soup)
-
-upper = percentage( soup, str.isupper )
-lower =percentage( soup, str.islower )
-
+erper = (errorCount(soup))
+#fre =textstat.flesch_reading_ease(soup)
+upper = text_percentage( soup, str.isupper )
+lower = text_percentage( soup, str.islower )
+fre =flesch_reading_ease(spacyword,spacysent,syllablecount)
 end = timeit.timeit()
 
 print("Time Taken to execute code : ",end - start)
 ans = avg_sentence_len(soup) #function call
 
 # creating a DataFrame for metrics
-dict = {'Metrics' : ['Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease',
+dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease',
 'Average Sentence length','Average lower case ', 'Average Upper case'],
-        'Value' : [gfi, lexd, erper ,fre,ans,upper,lower],
+        'Value' : [spacyword,spacysent,syllablecount,complexwords,gfi, lexd, erper ,fre,ans,upper,lower],
         }
 df = pd.DataFrame(dict) 
 # displaying the DataFrame
 print(df)
 
+
 #need to do few more matrics calculations 
 #gunning fog index need minor changes and validation
-
