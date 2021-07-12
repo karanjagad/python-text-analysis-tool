@@ -46,7 +46,7 @@ def spacyDataSplit(soup):
 def textstatDataSplit(soup):
     """Text Analysisng  using textstat library """
 
-    textstat.set_lang('de')
+    textstat.set_lang('en')
     your_text = soup
     textSyllable  =  textstat.syllable_count(your_text)
     textSent  = textstat.sentence_count(your_text)
@@ -61,8 +61,7 @@ def textstatDataSplit(soup):
         }
     df = pd.DataFrame(dict)
     return df
-    #frs = 206.835 - 1.015 *(textWords / textSent) - 84.6 * ( textSyllable / textWords)
-    #print( frs )
+   
 
 def syllable_count(wordlist):
     """Calculate syllable in word list or corpus"""
@@ -99,7 +98,7 @@ def complex_word_list(text):
 
 def gunning_fog_index(words,sent,complexWords):
     """Calculate Gunning Fog Index of corpus"""
-    gunIndex = 0.4*((words/sent)+100+(complexWords/words))
+    gunIndex = 0.4*((words/sent)+(complexWords/words)*100)
     return gunIndex
 
 def lexical_diversity(text):
@@ -150,13 +149,16 @@ def flesch_reading_ease(word,sent,syllab):
     fre= 206.835 - 1.015 * ( word / sent ) - 84.6 * ( syllab / word )
     return fre
 
+def automated_readablity_score(characters,words,sentences) :
+    ari  = 4.71 * (characters/words) + 0.5 * (words/sentences) - 21.43
+    return ari
+
 
 
 start = timeit.timeit()
 
 URL = 'https://en.wikipedia.org/wiki/Wiki'
 soup = webScrapping(URL)
-
 #Manual Split and textstat library used to compare between inital results 
 manualSplit(soup)
 
@@ -169,7 +171,7 @@ spacyword =len(spacyData[1])
 spacysent = len(spacyData[0])
 complexwords = len(complex_word_list(soup))
 syllablecount = syllable_count(list([soup]))
-
+charactercount = sum(len(i) for i in spacyData[1])
 gfi = gunning_fog_index(spacyword,spacysent,complexwords)
 #gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
 lexd = (lexicalDiversity([soup]))
@@ -178,20 +180,21 @@ erper = (errorCount(soup))
 upper = text_percentage( soup, str.isupper )
 lower = text_percentage( soup, str.islower )
 fre =flesch_reading_ease(spacyword,spacysent,syllablecount)
-end = timeit.timeit()
+ari = automated_readablity_score(charactercount,spacyword,spacysent)
 
-print("Time Taken to execute code : ",end - start)
+
 ans = avg_sentence_len(soup) #function call
 
 # creating a DataFrame for metrics
-dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease',
+dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease','Automate readablity score',
 'Average Sentence length','Average lower case ', 'Average Upper case'],
-        'Value' : [spacyword,spacysent,syllablecount,complexwords,gfi, lexd, erper ,fre,ans,upper,lower],
+        'Value' : [spacyword,spacysent,syllablecount,complexwords,gfi, lexd, erper ,fre,ari,ans,lower,upper],
         }
 df = pd.DataFrame(dict) 
 # displaying the DataFrame
 print(df)
+end = timeit.timeit()
 
-
+print("Time Taken to execute code : ",end - start)
 #need to do few more matrics calculations 
 #gunning fog index need minor changes and validation
