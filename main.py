@@ -83,10 +83,18 @@ def syllable_count(wordlist):
         syllabcount = syllabcount +  count 
         return syllabcount
 
+def complex_word_list(text):
+    complexwordlist = []
+    for word in spacyDataSplit(text)[1] :
+        #print(word,":",syllable_count([word]))
+        if syllable_count([word]) > 4:
+            complexwordlist.append(word)
+    return complexwordlist
+
 def gunning_fog_index(words,sent,complexWords):
     """Calculate Gunning Fog Index of corpus"""
 
-    gunIndex = 0.4*((words/sent)+100+(complexWords/words))
+    gunIndex = 0.4*((words/sent)+(complexWords/words))
     return gunIndex
 
 def lexical_diversity(text):
@@ -118,6 +126,21 @@ def errorCount(text):
         errorwords.append(err.word)
     return percentage(len(errorwords),len(spacyDataSplit(text)[1]))
 
+#function to calculate the average sentence length across a piece of text.
+def avg_sentence_len(text):
+  sentences = text.split(".") #split the text into a list of sentences.
+  words = text.split(" ") #split the input text into a list of separate words
+  if(sentences[len(sentences)-1]==""): #if the last value in sentences is an empty string
+    average_sentence_length = len(words) / len(sentences)-1
+  else:
+    average_sentence_length = len(words) / len(sentences)
+  return average_sentence_length #returning avg length of sentence
+
+def percentage(data, boolfunc):
+    """Returns how many % of the 'data' returns 'True' for the given boolfunc."""
+    return (sum(1 for x in data if boolfunc(x)) / len(data))*100
+
+
 start = timeit.timeit()
 
 URL = 'https://www.gevestor.de/finanzwissen/aktien'
@@ -132,17 +155,26 @@ print(textstatDataSplit(soup))
 #Using spacy Data for majority of calculations
 spacyData =  spacyDataSplit(soup)
 
-gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
+gfi = gunning_fog_index(len(spacyData[1]),len(spacyData[0]),len(complex_word_list(soup)))
+
+#gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
 lexd = (lexicalDiversity([soup]))
-erper = (errorCount(soup))
+#erper = (errorCount(soup))
+erper = 1
 fre =textstat.flesch_reading_ease(soup)
+
+upper = percentage( soup, str.isupper )
+lower =percentage( soup, str.islower )
+
 end = timeit.timeit()
 
 print("Time Taken to execute code : ",end - start)
+ans = avg_sentence_len(soup) #function call
 
 # creating a DataFrame for metrics
-dict = {'Metrics' : ['Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease'],
-        'Value' : [gfi, lexd, erper ,fre],
+dict = {'Metrics' : ['Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease',
+'Average Sentence length','Average lower case ', 'Average Upper case'],
+        'Value' : [gfi, lexd, erper ,fre,ans,upper,lower],
         }
 df = pd.DataFrame(dict) 
 # displaying the DataFrame
