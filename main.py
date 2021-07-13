@@ -10,12 +10,23 @@ import enchant
 from enchant.checker import SpellChecker
 import re
 
-def webScrapping(URL):
+
+
+def webScrappingold(URL):
     """Using BS4  for scrapping and getting data"""
 
     page = requests.get(URL)
     soup = BS.BeautifulSoup(page.content,'html.parser').get_text(strip=True)
     return soup
+
+
+def webScrapping(URL):
+    """Using BS4  for scrapping and getting data"""
+
+    page = requests.get(URL)
+    soup = BS.BeautifulSoup(page.content,'html.parser')
+    soup = list(soup.stripped_strings)
+    return ' '.join(soup) 
 
 def manualSplit(soup):
     """ Text Analysing using Manual Split"""
@@ -30,8 +41,8 @@ def manualSplit(soup):
 
 def spacyDataSplit(soup):
     """Text Analysisng  using Spacy library"""
-
-    nlp = spacy.load("de_core_news_sm")
+    nlp = spacy.load("en_core_web_sm")
+    #nlp = spacy.load("de_core_news_sm")
     about_doc = nlp(soup)
     sentences = list(about_doc.sents)
     about_doc = nlp(soup)
@@ -45,7 +56,7 @@ def spacyDataSplit(soup):
    
 def textstatDataSplit(soup):
     """Text Analysisng  using textstat library """
-
+    
     textstat.set_lang('en')
     your_text = soup
     textSyllable  =  textstat.syllable_count(your_text)
@@ -84,6 +95,7 @@ def syllable_count(wordlist):
         return syllabcount
 
 def complex_word_list(text):
+    """Calculate Complex words word using syllables """
     complexwordlist = []
     for word in spacyDataSplit(text)[1] :
         word = re.sub("es$", "", word)
@@ -102,6 +114,7 @@ def gunning_fog_index(words,sent,complexWords):
     return gunIndex
 
 def lexical_diversity(text):
+    """Calculate Lexical Diversity of corpus"""
     return len(set(text)) / len(text)
 
 # percentage
@@ -150,15 +163,21 @@ def flesch_reading_ease(word,sent,syllab):
     return fre
 
 def automated_readablity_score(characters,words,sentences) :
+    """Calculate readablity score"""
     ari  = 4.71 * (characters/words) + 0.5 * (words/sentences) - 21.43
     return ari
 
 
 
-start = timeit.timeit()
 
-URL = 'https://en.wikipedia.org/wiki/Wiki'
+start = timeit.timeit()
+#lang = input("Select Language Input De for German or En for English ")
+
+#changelanguage(lang)
+
+URL = 'https://www.vnrag.de/about-vnr/'
 soup = webScrapping(URL)
+soup = "About VNR - VNR Verlag für die Deutsche Wirtschaft AG info@vnr.de Kundenservice: +49 228 9550-100 Chat Self-Service "
 #Manual Split and textstat library used to compare between inital results 
 manualSplit(soup)
 
@@ -186,15 +205,13 @@ ari = automated_readablity_score(charactercount,spacyword,spacysent)
 ans = avg_sentence_len(soup) #function call
 
 # creating a DataFrame for metrics
-dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease','Automate readablity score',
-'Average Sentence length','Average lower case ', 'Average Upper case'],
+dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease','Automate readablity score','Average Sentence length','Average lower case ', 'Average Upper case'],
         'Value' : [spacyword,spacysent,syllablecount,complexwords,gfi, lexd, erper ,fre,ari,ans,lower,upper],
         }
 df = pd.DataFrame(dict) 
 # displaying the DataFrame
 print(df)
+print(soup)
 end = timeit.timeit()
 
 print("Time Taken to execute code : ",end - start)
-#need to do few more matrics calculations 
-#gunning fog index need minor changes and validation
