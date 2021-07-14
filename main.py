@@ -4,7 +4,7 @@ import requests
 import spacy 
 from spacy.lang.de.examples import sentences 
 from collections import Counter
-import timeit
+import time
 import pandas as pd
 import enchant
 from enchant.checker import SpellChecker
@@ -47,11 +47,15 @@ def spacyDataSplit(soup):
     sentences = list(about_doc.sents)
     about_doc = nlp(soup)
     sentences = list(about_doc.sents)
-    wordCount = [token.text for token in about_doc]
-    return [sentences, wordCount]
+    #wordCount = [token.text for token in about_doc]
+    wordstrip = re.sub(r'[?|$|.|!]',r'',soup)
+    word =wordstrip.split()
+    
+    return [sentences, word]
     print("Text analysisng using spacy ")
     print("Sentence Count", len(sentences))   
     print("Word Count",len(wordCount))
+
 
    
 def textstatDataSplit(soup):
@@ -158,27 +162,34 @@ def text_percentage(data, boolfunc):
     return (sum(1 for x in data if boolfunc(x)) / len(data))*100
 
 def flesch_reading_ease(word,sent,syllab):
-    
     fre= 206.835 - 1.015 * ( word / sent ) - 84.6 * ( syllab / word )
-    return fre
+    freg = 0.39*( word / sent ) + 11.8 *(syllab / word) - 15.59
+    return fre ,freg
 
 def automated_readablity_score(characters,words,sentences) :
-    """Calculate readablity score"""
     ari  = 4.71 * (characters/words) + 0.5 * (words/sentences) - 21.43
     return ari
 
 
 
 
-start = timeit.timeit()
-#lang = input("Select Language Input De for German or En for English ")
 
+
+start = time.time()
+#Languge change function need to add
+#lang = input("Select Language Input De for German or En for English ")
 #changelanguage(lang)
 
 URL = 'https://www.vnrag.de/about-vnr/'
 soup = webScrapping(URL)
-soup = "About VNR - VNR Verlag für die Deutsche Wirtschaft AG info@vnr.de Kundenservice: +49 228 9550-100 Chat Self-Service "
-#Manual Split and textstat library used to compare between inital results 
+
+#sample text 
+#soup = "With the method of spreading information tried and tested in Germany, VNR Verlag für die Deutsche Wirtschaft AG is successful around the world. "
+
+#To enter manual data
+#soup = input("Enter Text Here to get the score")
+
+#Manual Split and textstat library used to compare between inital results
 manualSplit(soup)
 
 print("Text Analyse using Textstat Library")
@@ -192,26 +203,20 @@ complexwords = len(complex_word_list(soup))
 syllablecount = syllable_count(list([soup]))
 charactercount = sum(len(i) for i in spacyData[1])
 gfi = gunning_fog_index(spacyword,spacysent,complexwords)
-#gfi = (gunning_fog_index((len(spacyData[1])),len((spacyData[0])),syllable_count(list(soup))))
 lexd = (lexicalDiversity([soup]))
 erper = (errorCount(soup))
-#fre =textstat.flesch_reading_ease(soup)
 upper = text_percentage( soup, str.isupper )
 lower = text_percentage( soup, str.islower )
-fre =flesch_reading_ease(spacyword,spacysent,syllablecount)
+fre ,freg =flesch_reading_ease(spacyword,spacysent,syllablecount)
 ari = automated_readablity_score(charactercount,spacyword,spacysent)
-
-
 ans = avg_sentence_len(soup) #function call
 
 # creating a DataFrame for metrics
-dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease','Automate readablity score','Average Sentence length','Average lower case ', 'Average Upper case'],
-        'Value' : [spacyword,spacysent,syllablecount,complexwords,gfi, lexd, erper ,fre,ari,ans,lower,upper],
+dict = {'Metrics' : ['Word Count','Sentence Count','Syllable Count','Complex Words','Average Sentence length','Average lower case ', 'Average Upper case','Gunning Fog Index', 'Lexical Diversity', 'Error percent in whole text','Flesch reading ease','Flesch Kincaid Grade Level','Automate readablity score'],
+        'Value' : [spacyword,spacysent,syllablecount,complexwords,ans,lower,upper,gfi, lexd, erper ,fre,freg,ari,],
         }
 df = pd.DataFrame(dict) 
 # displaying the DataFrame
 print(df)
-print(soup)
-end = timeit.timeit()
-
-print("Time Taken to execute code : ",end - start)
+end = time.time()
+print("Time Taken to execute code : ", end - start)
