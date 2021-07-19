@@ -1,2 +1,8 @@
 boto3==1.17.56
 botocore==1.20.56
+requests==2.25.1
+pandas==1.2.5
+spacy==3.0.6
+textstat==0.7.1
+beautifulsoup4==4.9.3
+pyenchant==3.2.1
