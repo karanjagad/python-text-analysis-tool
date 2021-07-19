@@ -10,10 +10,6 @@
 
 `pip install -r requirements.txt`
 
-# deactivate venv
-
-`deactivate`
-
 # Execute
 
 Need to pass three parameters in sequence
@@ -49,3 +45,7 @@ Refrence Grade Table
 |12|17-18|Twelfth grade|
 |13|18-24|College student|
 |14|24+|Professor|
+
+# deactivate venv
+
+`deactivate`
