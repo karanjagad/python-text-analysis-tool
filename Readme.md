@@ -23,10 +23,6 @@ English
 German
 `python -m spacy download de_core_news_sm`
 
-=======
->>>>>>> 579f78abc7d9bfcd1b5087a45497015ee5c184cc
-=======
->>>>>>> 579f78abc7d9bfcd1b5087a45497015ee5c184cc
 # Execute
 
 Need to pass three parameters in sequence
