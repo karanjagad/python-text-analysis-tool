@@ -10,8 +10,6 @@
 
 `pip install -r requirements.txt`
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Additional Requiremnts
 
 Spacy Language Model
