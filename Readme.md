@@ -10,10 +10,20 @@
 
 `pip install -r requirements.txt`
 
-# deactivate venv
+<<<<<<< HEAD
+# Additional Requiremnts
 
-`deactivate`
+Spacy Language Model
+refrence :https://spacy.io/usage/models
 
+English
+`python -m spacy download en_core_web_sm`
+
+German
+`python -m spacy download de_core_news_sm`
+
+=======
+>>>>>>> 579f78abc7d9bfcd1b5087a45497015ee5c184cc
 # Execute
 
 Need to pass three parameters in sequence
@@ -49,3 +59,7 @@ Refrence Grade Table
 |12|17-18|Twelfth grade|
 |13|18-24|College student|
 |14|24+|Professor|
+
+# deactivate venv
+
+`deactivate`
