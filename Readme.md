@@ -11,6 +11,7 @@
 `pip install -r requirements.txt`
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Additional Requiremnts
 
 Spacy Language Model
@@ -22,6 +23,8 @@ English
 German
 `python -m spacy download de_core_news_sm`
 
+=======
+>>>>>>> 579f78abc7d9bfcd1b5087a45497015ee5c184cc
 =======
 >>>>>>> 579f78abc7d9bfcd1b5087a45497015ee5c184cc
 # Execute
