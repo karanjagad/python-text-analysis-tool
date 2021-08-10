@@ -13,7 +13,7 @@
 # Additional Requiremnts
 
 Spacy Language Model
-refrence :https://spacy.io/usage/models
+refrence :`https://spacy.io/usage/models`
 
 English
 `python -m spacy download en_core_web_sm`
@@ -26,7 +26,7 @@ German
 Need to pass three parameters in sequence
 
 - 1st language for English 'En' for German 'De'
-- 2nd 'text' or 'url' (the python code can give the accuracy result for a webpage or a text)
+- 2nd 'text' or 'url' or fiile (the python code can give the accuracy result for a webpage ,textfile or a string)
 - 3rd pass full URL or pass text file path
 
 For Example
@@ -34,8 +34,10 @@ For Example
 - To get result of a web page which is in english
   `python main.py en url https://www.vnrag.de/about-vnr/`
 - To get result of a text which is in english
-  `python main.py en text sample.txt`
+  `python main.py en file sample.txt`
   (sample.txt file contains the text needs to be scored)
+- To get result of a text which is in english
+  `python main.py en text python main.py de text "Hallo, wie geht's dir"`
 
 The Code gives result as a grade as in who can read the text and also gives additional details to know more about the text
 Refrence Grade Table

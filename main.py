@@ -195,7 +195,7 @@ def avgerage_sentence_length(text):
         average_sentence_length = len(words) / len(sentences) - 1
     else:
         average_sentence_length = len(words) / len(sentences)
-    return average_sentence_length
+    return round(average_sentence_length, 2)
 
 
 def text_percentage(data, boolfunc):
@@ -301,19 +301,23 @@ def csv_reader(filepath):
     reader = csv.reader(open(filepath, encoding="utf-8-sig"), delimiter=";")
     for row in reader:
         spam_list.append(row)
-    return spam_list
+    return spam_list[0]
 
 
 def spam_check(text, spamlist):
 
-    """Check if the string has any spam words from spamlist"""
+    """Check if the string has any spam words from spamlist
+
+    Args:
+        text (list): list of words to be checked
+        spamlist (list):spam list file as a csv
+    Returns:
+        wordfound(list): List of words which are found in the spam word list (spamwordlist.csv)
+    """
 
     wordfound = []
     for word in text:
-
         if word in spamlist:
-            print("inside", word)
-            print("Text contain spam words")
             wordfound.append(word)
     return wordfound
 
@@ -329,53 +333,47 @@ def analyse_text(soup, language):
     gunning_fog_index_result = gunning_fog_index(
         len(spacy_word), len(spacy_sentence), len(complex_words)
     )
-    lexical_diversity_result = lexical_diversity([soup])
+    lexical_diversity_result = lexical_diversity([soup])[0]
     error_count_result = error_count(soup, language)
     upper_case_percentage = text_percentage(soup, str.isupper)
     lower_case_percentage = text_percentage(soup, str.islower)
     flesch_reading_ease_result, flesch_reading_ease_index_result = flesch_reading_ease(
         len(spacy_word), len(spacy_sentence), syllable_count
     )
-    average_sentence_length_result = automated_readablity_score(
+    automate_readablity_score_result = automated_readablity_score(
         character_count, len(spacy_word), len(spacy_sentence)
     )
     average_sentence_length_result = avgerage_sentence_length(soup)  # function call
 
-    # creating a DataFrame for metrics
-    dict = {
-        "Metrics": [
-            "Word Count",
-            "Sentence Count",
-            "Syllable Count",
-            "Complex Words",
-            "Average Sentence length",
-            "Average lower case ",
-            "Average upper_case_percentage case",
-            "Gunning Fog Index",
-            "Lexical Diversity",
-            "Error percent in whole text",
-            "Flesch reading ease",
-            "Flesch Kincaid Grade Level",
-            "Automate readablity score",
-        ],
-        "Value": [
-            len(spacy_word),
-            len(spacy_sentence),
-            syllable_count,
-            len(complex_words),
-            average_sentence_length_result,
-            lower_case_percentage,
-            upper_case_percentage,
-            gunning_fog_index_result,
-            lexical_diversity_result,
-            error_count_result,
-            flesch_reading_ease_result,
-            flesch_reading_ease_index_result,
-            average_sentence_length_result,
-        ],
-    }
-    df = pd.DataFrame(dict)
+    # Spamlist checking
+    spamlist = csv_reader("spamwordlist.csv")
+    spam_check_result = spam_check(spacy_word, spamlist)
 
+    # creating a Dictionary
+    metrics_values = {
+        "Word Count": len(spacy_word),
+        "Sentence Count": len(spacy_sentence),
+        "Syllable Count": syllable_count,
+        "Complex Words": len(complex_words),
+        "Average Sentence length": average_sentence_length_result,
+        "Average lower case": lower_case_percentage,
+        "Average upper_case_percentage case": upper_case_percentage,
+        "Gunning Fog Index": gunning_fog_index_result,
+        "Lexical Diversity": lexical_diversity_result,
+        "Error percent in whole text": error_count_result,
+        "Flesch reading ease": flesch_reading_ease_result,
+        "Flesch Kincaid Grade Level": flesch_reading_ease_index_result,
+        "Automate readablity score": automate_readablity_score_result,
+        "Spam Word List": spam_check_result,
+        "Spam Percentage": (len(spam_check_result) / len(spacy_word)),
+    }
+
+    # Create the pandas DataFrame from dictionary
+    metrics_values_to_df = dfObj = pd.DataFrame(
+        list(metrics_values.items()), columns=["Metrics", "Values"]
+    )
+
+    print(metrics_values_to_df.round({"Values": 2}))
     # Taking average of 3 metrics to determine difficulty level of the text.
     avgmetrics = (
         gunning_fog_index_result
@@ -388,18 +386,21 @@ def analyse_text(soup, language):
         "and Difficulty score is",
         round(avgmetrics, 2),
     )
-    return df
+    return metrics_values_to_df
 
 
 def main(language, path, url):
 
     start = time.time()
-    # Check for text or url
+    # Check for text ,url or text file. Here variable url can be link,a file name or a text string
     if path == "url":
         soup = scrap_webpage_to_text(url)
-    if path == "text":
+    if path == "file":
         f = open(url, "r")
         soup = f.read()
+    if path == "text":
+        soup = url
+
     language = language.lower()
 
     # Execute all metric function
@@ -411,8 +412,6 @@ def main(language, path, url):
     end = time.time()
     print("Time Taken to execute code : ", end - start)
 
-
-# Spam check function created need to develop further
 
 # Calling main function where arguments are passed
 if __name__ == "__main__":
