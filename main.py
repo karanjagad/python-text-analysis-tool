@@ -132,7 +132,7 @@ def percentage(count, total):
 
 
 def lexical_diversity(texts):
-    """Texical diversity score in percentage
+    """Lexical diversity score in percentage
 
     Args:
         texts (string): Corpus
